@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# Uses these scripts:
+# ohroot
+#
+# and these files:
+# as-called abc
+# 
+# it makes these files:
+# as-called ps, pdf
+#
+
+OHROOT=`ohroot`
+for i in $*
+do 
+	PREPPED=`grep "\%\%header" ${i} | wc | awk '{print $1}'`
+	if [ ${PREPPED} == "0" ] 
+   then
+	   #echo need to prep
+   	prep-hymn-for-inclusion.pl ${i} > temp.abc
+   else
+   	#echo no need to prep
+      cp ${i} temp.abc
+   fi
+	abcm2ps  -F ${OHROOT}default -O ${i%abc}ps temp.abc
+   ps2pdf -sPAPERSIZE=letter ${i%abc}ps ${i%abc}pdf
+   #rm temp.abc
+done

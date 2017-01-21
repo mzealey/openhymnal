@@ -1,0 +1,11 @@
+#!/bin/bash
+build-printedtuneindex.pl
+echo 1 of 5
+build-printedmetricalindex.pl
+echo 2 of 5
+build-printedpeopleindex.pl
+echo 3 of 5
+build-printedscriptureindex.pl
+echo 4 of 5
+build-single-topical-index.pl
+

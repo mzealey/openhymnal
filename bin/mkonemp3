@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# Uses these scripts:
+#
+# and these files:
+# ?.mid
+# 
+# it makes these files:
+# ?.mp3
+
+for i in ${1}
+do 
+BASE=${i##*/}
+if [ ! -e ${BASE%mid}mp3 ]
+then
+echo $i
+timidity -Ow -o${BASE%mid}wav $i
+sox -c2 ${BASE%mid}wav -c1 ${BASE%.mid}2.wav mixer -l
+lame -h ${BASE%.mid}2.wav ${BASE%mid}mp3
+#twolame -b 64 -m m  ${BASE%.mid}2.wav ../Mp3/${BASE%mid}mp3
+rm ${BASE%mid}wav ${BASE%.mid}2.wav
+fi
+done

@@ -1,0 +1,45 @@
+#!/bin/bash
+# This script build the Open Hymnal big pdf by making one big abc file, compiling it, then adding indices/title pages/etc.
+#
+# Uses these scripts:
+# ohroot
+# list-hymns-in-OH-order.pl
+# prep-hymn-for-inclusion.pl
+# update-pdf
+# present-hymn-number
+#
+# and these files:
+# 2012indexpt1.pdf
+# 2012indexpt2.pdf
+# 
+# it makes these files:
+# OpenHymnal2012.09.pdf
+# (as temp files) big-pdf.abc, big-pdf.ps, big-pdf.pdf
+#
+# Version 1.0 07 Jan 2011 reworked from old semi-by-hand assembly method that stitched individual pdfs
+# Version 1.1 13 Jan 2011 to use the script present-hymn-number
+OHROOT=`ohroot`
+
+if [ -e big-pdf.abc ]
+then
+	rm big-pdf.abc
+fi
+
+PG=22 # really only matters if this is odd or even
+
+for i in `list-hymns-in-OH-order.pl` 
+do
+	HYMN=`present-hymn-number ${i}`
+	prep-hymn-for-inclusion.pl ${i} ${HYMN} ${PG} >> big-pdf.abc
+	echo >> big-pdf.abc
+	echo "%%newpage" >> big-pdf.abc
+	HYMN=""
+	ADD=`numpages-in-hymn.pl ${i}`
+	PG=$((PG+ADD))
+done
+update-pdf big-pdf.abc
+cat ${OHROOT}Bookmarks ${OHROOT}2014indexpt1.ps big-pdf.ps ${OHROOT}2014indexpt2.ps > combined.ps
+ps2pdf -sPAPERSIZE=letter combined.ps
+#pdftk  combined.pdf df cat output ${OHROOT}OpenHymnal2014.06.pdf
+mv combined.pdf ${OHROOT}OpenHymnal2014.06.pdf
+# rm big-pdf.ps big-pdf.pdf

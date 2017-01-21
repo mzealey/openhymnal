@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# Uses these scripts:
+# ohroot
+#
+# and these files:
+# Web/Midi/*.mid
+# 
+# it makes these files:
+# Web/Mp3/*.mp3
+OHROOT=`ohroot`
+
+for i in ${OHROOT}Web/Midi/*.mid
+do 
+BASE=${i##*/}
+if [ ! -e ${OHROOT}Web/Mp3/${BASE%mid}mp3 ]
+then
+echo $i
+timidity -Ow -o${BASE%mid}wav $i
+#sox -c2 ${BASE%mid}wav -c1 ${BASE%.mid}2.wav mixer -l
+sox -c2 ${BASE%mid}wav -c1 ${BASE%.mid}2.wav
+bjd-normalize ${BASE%.mid}2.wav
+lame -h ${BASE%.mid}2.wav ${OHROOT}Web/Mp3/${BASE%mid}mp3
+#twolame -b 64 -m m  ${BASE%.mid}2.wav ../Mp3/${BASE%mid}mp3
+rm ${BASE%mid}wav ${BASE%.mid}2.wav
+fi
+done

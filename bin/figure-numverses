@@ -1,0 +1,199 @@
+#!/usr/bin/perl
+#
+# Uses these scripts:
+# -none-
+#
+# and these files:
+# as-called abc
+# 
+# it makes these files:
+# - none - (writes to STDOUT)
+#
+
+$input = $ARGV[0];
+
+# First thing, compare to blacklist
+$ohroot=`ohroot`;
+$ohroot=~ s/\n//;
+$bl = $ohroot . "bin/grab-lyrics-blacklist";
+open (BL, "<$bl");
+$infilename=$input;
+$infilename =~ s/^.*\///;
+while ( <BL> ) {
+	$_ =~ s/\n//;
+	if ( $infilename eq $_ ) {
+		print STDERR "file ".$infilename." is blacklisted\n";
+		exit;
+	}
+}
+close BL;
+
+open (INFILE, "<$input");
+@parts=split ("/",$input);
+$fn=$parts[$#parts];
+$fn=substr($fn,0,length($fn)-4);
+#print STDERR $input,"\n";
+# READ IN EVERYTHING
+$extras = "\n";
+$tags = "";
+$auth = "";
+$prehead = "";
+$stafftofind = "nevergoingtofindthis";
+$found=0;
+$max=0;
+$staff = -1;
+$startedstaves = 0;
+for ($i=0; $i < 50; $i++) { # max 50 staffs
+	$numlyrics[$i] = 0;
+}
+while (<INFILE>) {
+   if (/%OHTOPICS/) {
+		$tags = $_;
+		$tags =~ s/\{([^\}\(]*)[,] ([^\}]*)\}/\1 \(\2\)/g;
+		$tags =~ s/\{//g;
+		$tags =~ s/\}//g;
+		$tags =~ s/[\[][0-9,-]*[\]]//g;
+		$tags =~ s/%OHTOPICS//;
+		$tags =~ s/^\s*//g;
+		$tags =~ s/\s*$//g;
+		$tags =~ s/\s+[,]/,/g;
+   }
+   if (/T:/) {
+   	if ( length($title) > 0 ) {
+   		$title .= " ";
+   	}
+      $title = $title . $_;
+      $title =~ s/T: //;
+      $title =~ s/\n//;
+   }
+   if (/C:/) {
+      $auth = $auth . $_;
+      $auth =~ s/C: //;
+      $auth =~ s/\n//;
+   }
+   if (/w:/) {
+   	#print STDERR "staff ",$staff,"\n";
+   	#print STDERR "numlyrics[staff] ",$numlyrics[$staff],"\n";
+   	$lyr[$staff][$numlyrics[$staff]] = $_;
+   	$lyr[$staff][$numlyrics[$staff]] =~ s/\n//;
+   	$lyr[$staff][$numlyrics[$staff]] =~ s/^w: //;
+   	#$lyr[$staff][$numlyrics[$staff]] =~ s/[*] //g;
+   	#$lyr[$staff][$numlyrics[$staff]] =~ s/[-] //g;
+   	#$lyr[$staff][$numlyrics[$staff]] =~ s/([^\\])[-] /\1/g;
+   	#$lyr[$staff][$numlyrics[$staff]] =~ s/[\\][-]/-/g;
+   	$lyr[$staff][$numlyrics[$staff]] =~ s/^([0-9]+.)~/\1 /g;
+   	$numlyrics[$staff]++;
+   	#print STDERR "Staff ",$staff," lyrics:",$_;
+      $found += 1;
+      if ($found > $max) { $max = $found; };
+      $lyrics[$found] = $lyrics[$found] . $_;
+      $last = $_;
+	}
+   elsif (/W:/) {
+  			$_ =~ s/^W:\s*//;
+  			$_ =~ s/^([0-9]+[.])/\n\1\\t/; 
+  			$_ =~ s/^([A-Za-z'"])/\\t\1/; 
+	   	#$_ =~ s/[\\][-]/-/g;
+	   	#print STDERR "ADDING1 ",$_;
+     		$extras = $extras . $_ ;
+   }
+   elsif (/%%begintext/) {
+  			#$extras = $extras . $_ ;
+  			if ( $startedstaves == 1 ) {
+	  			$_ = <INFILE>;
+	   		while ( ! /%%endtext/ ) {
+	   			$_ =~ s/^%% //;
+	   			$_ =~ s/^%%//;
+			   	#$_ =~ s/[\\][-]/-/g;
+	   	#print STDERR "ADDING2 ",$_;
+	     			$extras = $extras . $_ ;
+		  			$_ = <INFILE>;
+	     		}
+     		}
+     		else {
+	  			$_ = <INFILE>;
+	   		while ( ! /%%endtext/ ) {
+	   			$_ =~ s/^%% //;
+	   			$_ =~ s/^%%//;
+			   	#$_ =~ s/[\\][-]/-/g;
+	     			$prehead = $prehead . $_ ;
+		  			$_ = <INFILE>;
+	     		}
+     		}
+   }
+   else {
+   	if ( /\[V\: S/ && $staff == -1 ) {
+   		$stafftofind = $_;
+   		$stafftofind =~ s/\].*$/\]/;
+   		$stafftofind =~ s/^.*\[/\[/;
+   		$stafftofind =~ s/\n//;
+   		#$stafftofind =~ s/[:]/\[:\]/;
+   		#$stafftofind =~ s/\]$/\[\\\]\]/;
+   		#$stafftofind =~ s/^\[/\[\\\[\]/;
+   		#print STDERR "lyrics after ",$stafftofind,"\n";
+   	}
+   	
+   	if ( index ($_, $stafftofind) >= 0 ) {
+   		$staff++;
+   		#print STDERR "new staff ",$_,"\n";
+   		$startedstaves = 1;
+   	}
+   	#elsif ( length($stafftofind) < 20 ) {
+   	#	print STDERR "rejected {",$_,"}\nsearch is {",$stafftofind,"}index is ",index ($_, $stafftofind),"\n";
+   	#}
+   	
+      if (($found > 0) && ($found < $max)) {
+         for ($i=$found+1; $i <= $max; $i++) {
+   		   $lyrics[$i] = $lyrics[$i] . $last;
+         }
+         $reallast = $last;
+         $found = $max;
+      }
+      $found=0;
+      }
+}
+
+$maxlyr = $numlyrics[0];
+for ($i=0; $i <= $staff; $i++) { 
+	if ( $numlyrics[$i] > $maxlyr) {
+		$maxlyr = $numlyrics[$i];
+	}
+}
+		#print STDERR "maxlyr is ",$maxlyr,"\n";
+
+for ($i=0; $i <= $staff; $i++) { 
+	if (( $numlyrics[$i] != $maxlyr) && ( $numlyrics[$i] != 1 )) {
+		print STDERR "WARNING FOR STAFF ",$i+1," - THINGS LOOK TOO WEIRD, EXITING ",$input,"\n";
+		print STDERR "<META name=\"keywords\" content=\"Free, Public Domain, Christian Hymns, Music Scores, Midi, ".$tags."\">\n";
+		print STDERR "<title>Open Hymnal Project: " . ${title} . "</title>\n";
+		
+		exit;
+	}
+}
+#print STDERR "reallast\n",$reallast;
+if ( $extras ne "\n" ) {
+     		$extras = $extras; # . $reallast;
+     		#print STDERR "EXTRAS\n",$extras;
+     		# if extras begin with [0-9] or \t, then it's a verse.  Otherwise, a comment or heading
+     		# a comment is after all verses, a heading is at the top or in the middle
+     		$vnum = 0; #should this be 0 or $maxlyr?
+     		while ( length($extras) > 0 ) {
+	     		#print STDERR "search for {",$vnum+$maxlyr+1,".} in extras.\n";
+   	  		$next = $vnum+$maxlyr+1;
+   	  		$string = "\n[ ]*" . $next . "[.]";
+   	  		#print STDERR "\n-----------------------\n",$string,"\n";
+   	 		@parts = split $string, $extras;
+   	  		$vnum++;
+   	  		$extras = $parts[1];
+   	  		if( length($parts[2]) > 0 ) {
+   	  			print STDERR "\n\nWARNING ON EXTRAS!!!!!\n\n";
+   	  		}
+     		}
+}
+else {$vnum = 1;}
+
+	print STDERR "total verses: ",$vnum+$maxlyr-1,"\n";
+exit;
+
+
+

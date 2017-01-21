@@ -1,0 +1,73 @@
+  autoclef      yes
+  barsperstaff  0
+  botmargin     1.3cm
+  combinevoices 1
+  composerfont  Times-Italic 14.0
+  composerspace 0.20cm
+  continueall   no
+  encoding      ASCII
+  exprabove     no
+  exprbelow     no
+  footer        ""
+  footerfont    Times-Italic 9.0
+  freegchord    no
+  flatbeams     no
+  gchordbox     no
+  gchordfont    Helvetica 12.0
+  graceslurs    yes
+  header        ""
+  headerfont    Times-Roman 10.0
+  indent        0.00cm
+  infofont      Times-Italic 14.0
+  infoline      no
+  infospace     0.00cm
+  landscape     no
+  leftmargin    1.80cm
+  lineskipfac   1.10
+  maxshrink     0.65
+  measurebox    no
+  measurefirst  1
+  measurefont   Times-Italic 14.0
+  measurenb     -1
+  musiconly     no
+  musicspace    0.15cm
+  notespacingfactor 1.41
+  oneperpage    no
+  pageheight    11in
+  pagewidth     8.5in
+  parskipfac    0.10
+  partsbox      no
+  partsfont     Times-Roman 15.0
+  partsspace    0.30cm
+  printparts    yes
+  printtempo    yes
+  repeatfont    Times-Roman 13.0
+  rightmargin   1.80cm
+  scale         0.75
+  slurheight    1.00
+  splittune     no
+  squarebreve   no
+  staffsep      1.62cm
+  staffwidth    17.40cm
+  straightflags no
+  stretchlast   no
+  stretchstaff  yes
+  subtitlefont  Times-Roman 16.0
+  subtitlespace 0.10cm
+  sysstaffsep   1.20cm
+  tempofont     Times-Bold 15.0
+  textfont      Times-Roman 13.0
+  textspace     -0.50cm
+  titlecaps     no
+  titlefont     Times-Roman 20.0
+  titleleft     no
+  titlespace    -0.50cm
+  topmargin     1.35cm
+  topspace      -0.20cm
+  vocalabove    no
+  vocalfont     Times-Roman 13.0
+  vocalspace    0.20cm
+  withxrefs     no
+  wordsfont     Times-Roman 13.0
+  wordsspace    0.00cm
+  writehistory  no

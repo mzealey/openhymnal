@@ -1,0 +1,18 @@
+#!/bin/bash
+#######################################################################
+#     This is a script to print the root directory where the OH 
+# database and directory/file structure resides
+#
+# Uses these scripts:
+# - none -
+#
+# and these files:
+# - none -
+# 
+# it makes these files:
+# - none - (sent to STDOUT)
+#
+# version 1.0 02 Jan 2011 (bjd)
+# version 1.1 19 Apr 2011 (bjd) - moved directory
+#######################################################################
+echo /home/asc/bjd/Desktop/OH/

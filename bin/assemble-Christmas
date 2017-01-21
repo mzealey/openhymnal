@@ -1,0 +1,46 @@
+#!/bin/bash
+# This script build the Open Hymnal Christmas Edition big pdf by making one big abc file, compiling it, then adding indices/title pages/etc.
+#
+# Uses these scripts:
+# ohroot
+# christmas-hymns-in-OH-alphabetical-order.pl
+# prep-hymn-for-inclusion.pl
+# update-pdf
+# present-hymn-number-christmas
+#
+# and these files:
+# ChristmasEdition/2010Christmasindex.pdf
+#
+# 
+# it makes these files:
+# OpenHymnalChristmas2012.pdf
+# (as temp files) christmas-pdf.abc, christmas-pdf.ps, christmas-pdf.pdf
+#
+# Version 1.0 07 Jan 2011 reworked from old semi-by-hand assembly method that stitched individual pdfs
+# Version 1.1 13 Jan 2011 to use the script present-hymn-number
+OHROOT=`ohroot`
+
+if [ -e christmas-pdf.abc ]
+then
+	rm christmas-pdf.abc
+fi
+
+PG=5 # really only matters if this is odd or even
+
+for i in `list-hymns-in-OH-christmas-order.pl` 
+do
+	HYMN=`present-hymn-number-christmas ${i}`
+	prep-hymn-for-inclusion.pl ${i} ${HYMN} ${PG} >> christmas-pdf.abc
+	echo >> christmas-pdf.abc
+	echo "%%newpage" >> christmas-pdf.abc
+	HYMN=""
+	ADD=`numpages-in-hymn.pl ${i}`
+	PG=$((PG+ADD))
+done
+update-pdf christmas-pdf.abc
+cat ${OHROOT}ChristmasEdition/BookmarksChristmas ${OHROOT}ChristmasEdition/2013Christmasindex.ps christmas-pdf.ps copying.ps > combined.ps
+ps2pdf -sPAPERSIZE=letter combined.ps
+mv combined.pdf ${OHROOT}ChristmasEdition/OpenHymnalChristmas2013.pdf
+rm christmas-pdf.ps christmas-pdf.pdf combined.ps
+exit
+

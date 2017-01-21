@@ -1,0 +1,32 @@
+#!/bin/sh
+#######################################################################
+#     This is a script to alter the *-core.html files, building the 
+# whole Web site
+#
+# Uses these scripts:
+# ohroot
+# build-newgenindex.pl
+# build-topical-index.pl
+# splitgenindex.pl
+# build-mobilebrowse-pages
+# build-mobilenewbrowse-pages
+#
+# and these files:
+# - Web/Build/mobile-header.html
+# - Web/Build/header.html
+# - Web/Build/*-core.html
+# 
+# it makes these files:
+# Web/Build/New/*.html
+#
+# version 1.0 03 Jan 2011 (bjd) 
+# version 1.1 19 Jan 2011 (bjd) to add splitgenindex.pl and 
+#                               build-topical-index.pl
+#######################################################################
+OHROOT=`ohroot`
+
+${OHROOT}bin/build-core-web-files.sh
+${OHROOT}bin/splitgenindex.pl
+${OHROOT}bin/build-mobilebrowse-pages
+${OHROOT}bin/build-mobilenewbrowse-pages
+for i in ${OHROOT}Web/Build/*-core.html;do OUT=${i##*/}; ${OHROOT}bin/mkpage $i > ${OHROOT}Web/Build/New/${OUT%-core.html}.html;done

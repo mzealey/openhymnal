@@ -1,0 +1,28 @@
+#!/bin/bash
+# This script is the old way to make the Easter Edition, and will need to change to be more like the way the big edition is made.
+OHROOT=`ohroot`
+
+if [ -e easter-pdf.abc ]
+then
+	rm easter-pdf.abc
+fi
+
+PG=5 # really only matters if this is odd or even
+
+for i in `list-hymns-in-OH-easter-order.pl` 
+do
+	HYMN=`present-hymn-number-easter ${i}`
+	prep-hymn-for-inclusion.pl ${i} ${HYMN} ${PG} >> easter-pdf.abc
+	echo "%%newpage" >> easter-pdf.abc
+	HYMN=""
+	ADD=`numpages-in-hymn.pl ${i}`
+	PG=$((PG+ADD))
+done
+update-pdf easter-pdf.abc
+cat ${OHROOT}EasterEdition/BookmarksEaster ${OHROOT}EasterEdition/2011Easterindexpt1.ps easter-pdf.ps copying.ps > combined.ps
+ps2pdf -sPAPERSIZE=letter combined.ps
+mv combined.pdf ${OHROOT}EasterEdition/OpenHymnalEaster2011.pdf
+rm easter-pdf.ps easter-pdf.pdf combined.ps
+
+exit
+

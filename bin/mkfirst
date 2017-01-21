@@ -1,0 +1,18 @@
+#!/bin/sh
+#######################################################################
+#     This is a script to alter the *-core.html files, building the 
+# base files for the Web site
+#
+# Uses these scripts:
+# ohroot
+# build-newgenindex.pl
+# build-topical-index.pl
+#
+# it makes these files:
+# Web/Build/*-core.html
+#
+# version 1.0 18 Mar 2013
+#######################################################################
+OHROOT=`ohroot`
+${OHROOT}bin/build-newhymnindex.pl > ${OHROOT}Web/Build/new-core.html
+

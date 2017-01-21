@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Uses these scripts:
+# ohroot
+# numpages-in-hymn.pl
+#
+# and these files:
+# as-called abc
+# 
+# it makes these files:
+# as-called gif
+#
+OHROOT=`ohroot`
+      N=`numpages-in-hymn.pl ${1}`
+
+
+
+      if [ 0${N} == "01" ] 
+      then 
+         grep -v footer $1 | grep -v header > tmp.abc 
+         abcm2ps  -F ${OHROOT}default -O tmp.ps tmp.abc
+#         ps2ps tmp.ps temp.ps
+cat tmp.ps | gs -sDEVICE=ppmraw -dNOPAUSE -r600x600 -sOutputFile=bjd2.ppm -
+         cat bjd2.ppm | pnmcrop - | pnmscale 0.1666667 - | pnmnorm -bpercent 5 -wpercent 50 | ppmtogif - > ${1%abc}gif
+#         pstopnm -dpi 600 -ppm tmp.ps -stdout | pnmcrop - | pnmscale 0.1666667 - | pnmnorm -bpercent 5 -wpercent 50 | ppmtogif - > ${1%abc}gif
+         rm tmp.ps tmp.abc bjd2.ppm
+      else 
+      	grep -v footer $1 | grep -v header > tmp.abc
+         abcm2ps  -F ${OHROOT}default  -O tmp.ps tmp.abc
+         cat tmp.ps | gs -sDEVICE=ppmraw -dNOPAUSE -r600x600 -sOutputFile=tmp00%d.ppm -
+         #pstopnm -dpi 600 -ppm tmp.ps
+         for j in tmp00?.ppm
+            do
+               cat ${j} | pnmcrop - > tmp.ppm
+               mv tmp.ppm ${j}
+            done
+         pnmcat -tb tmp00?.ppm > tmp.ppm
+         rm tmp00?.ppm
+         sync
+         cat tmp.ppm | pnmscale 0.1666667 - | pnmnorm -bpercent 5 -wpercent 50 | ppmtogif - > ${1%abc}gif
+         rm tmp.ppm tmp.ps tmp.abc
+      fi
+
+

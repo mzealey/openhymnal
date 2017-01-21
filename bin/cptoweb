@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# Uses these scripts:
+# ohroot
+#
+# and these files:
+# as-called - abc, gif, html, mid, pdf
+# 
+# it makes these files:
+# copies to Web/ and /mnt/openhymnal.org/
+#
+# 06 Jan 2011
+ONLINEROOT="/mnt/openhymnal.org/"
+#ONLINEROOT="/mnt/openhymnal.org/www/openhymnal.org/"
+
+OHROOT=`ohroot`
+cp -d --preserve=mode,timestamps,links,xattr ${1}abc ${OHROOT}Web/Abc/
+cp -d --preserve=mode,timestamps,links,xattr ${1}gif ${OHROOT}Web/Gif/
+cp -d --preserve=mode,timestamps,links,xattr ${1}html ${OHROOT}Web/Lyrics/
+cp -d --preserve=mode,timestamps,links,xattr ${1}mid ${OHROOT}Web/Midi/
+cp -d --preserve=mode,timestamps,links,xattr ${1}pdf ${OHROOT}Web/Pdf/
+cp -d --preserve=mode,timestamps,links,xattr ${1}abc ${ONLINEROOT}Abc/
+cp -d --preserve=mode,timestamps,links,xattr ${1}gif ${ONLINEROOT}Gif/
+cp -d --preserve=mode,timestamps,links,xattr ${1}html ${ONLINEROOT}Lyrics/
+cp -d --preserve=mode,timestamps,links,xattr ${1}mid ${ONLINEROOT}Midi/
+cp -d --preserve=mode,timestamps,links,xattr ${1}pdf ${ONLINEROOT}Pdf/

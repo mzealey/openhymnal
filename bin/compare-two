@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+
+# file to open
+open (INPUT, $ARGV[0] );
+$book1 = "";
+while (<INPUT>) {
+	$_ = lc ( $_ );
+	$_ =~ s/\n//g;
+	$_ =~ s/\t//g;
+	$_ =~ s/[,]//g;
+	$_ =~ s/ //g;
+	$book1 .= $_;
+}
+$book1 =~ s/<\/b><\/p>/<\/b><\/p>\n/g;
+$book1 =~ s/<p>//g;
+$book1 =~ s/<\/p>//g;
+$book1 =~ s/[<]br[>]/\n/g;
+
+close INPUT;
+open OUTPUT, ">tmp1";
+print OUTPUT $book1;
+close OUTPUT;
+
+# file to open
+open (INPUT, $ARGV[1] );
+$book2 = "";
+while (<INPUT>) {
+	$_ = lc ( $_ );
+	$_ =~ s/\n//g;
+	$_ =~ s/\t//g;
+	$_ =~ s/[,]//g;
+	$_ =~ s/ //g;
+	$book2 .= $_;
+}
+$book2 =~ s/<\/b><\/p>/<\/b><\/p>\n/g;
+$book2 =~ s/<p>//g;
+$book2 =~ s/<\/p>//g;
+$book2 =~ s/[<]br[>]/\n/g;
+
+close INPUT;
+open OUTPUT, ">tmp2";
+print OUTPUT $book2;
+close OUTPUT;
+exit;
+
+
+if ( $book1 eq $book2 ) {
+	print "same\n";
+	}
+	else {
+	print "differ\n";
+	}

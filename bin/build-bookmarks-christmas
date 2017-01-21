@@ -1,0 +1,37 @@
+#!/bin/bash
+OHROOT=`ohroot`
+PG=4 # really only matters if this is odd or even
+OLDSEC="Intro"
+
+echo "[/Title (The Open Hymnal Project) /Author (The Open Hymnal Project) /DOCINFO pdfmark		% Document information"
+echo "[/View [/XYZ null null 1] /Page 1 /PageMode /UseOutlines /DOCVIEW pdfmark 	% Set the bookmarks tab to be open"
+echo "[/Title (Title Page) /Page 1 /View [/XYZ null null 0] /OUT pdfmark"
+echo "[/Title (Common Index) /Page 2 /View [/XYZ null null 0] /OUT pdfmark"
+
+for i in `list-hymns-in-OH-christmas-order.pl` 
+do
+	HYMN=`present-hymn-number-christmas ${i}`
+	SEC=`present-hymn-section ${i}`
+	KEY0=0${SEC/ /}
+	KEY1=0${KEY0/ /}
+	KEY2=0${KEY1/\'/}
+	if [ ${OLDSEC} != ${KEY2} ]
+	then
+#		echo ${SEC} ${HYMN} ${PG} ${i}
+		echo "[/Title ("${SEC}") /Page "${PG}" /View [/XYZ null null 0] /OUT pdfmark"
+
+#	else
+#		echo "                      " ${SEC} 
+	fi
+	HYMN=""
+	ADD=`numpages-in-hymn.pl ${i}`
+	PG=$((PG+ADD))
+	OLDSEC=${KEY2}
+done
+echo "[/Title (Copyright Info) /Page ${PG} /View [/XYZ null null 0] /OUT pdfmark"
+#echo "[/Title (Metrical Tune Index) /Page $((PG+3)) /View [/XYZ null null 0] /OUT pdfmark"
+#echo "[/Title (Author Index) /Page $((PG+5)) /View [/XYZ null null 0] /OUT pdfmark"
+#echo "[/Title (Composer Index) /Page $((PG+8)) /View [/XYZ null null 0] /OUT pdfmark"
+#echo "[/Title (Scripture Reference Index) /Page $((PG+12)) /View [/XYZ null null 0] /OUT pdfmark"
+#echo "[/Title (Topical Index) /Page $((PG+20)) /View [/XYZ null null 0] /OUT pdfmark"
+

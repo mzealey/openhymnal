@@ -1,0 +1,117 @@
+#!/usr/bin/perl
+#
+# Uses these scripts:
+# -none-
+#
+# and these files:
+# as-called abc
+# 
+# it makes these files:
+# - none - (writes to STDOUT)
+#
+
+$input = $ARGV[0];
+open (INFILE, "<$input");
+@parts=split ("/",$input);
+$fn=$parts[$#parts];
+$fn=substr($fn,0,length($fn)-4);
+
+# READ IN EVERYTHING
+$extras = "";
+$auth = "";
+$found=0;
+$max=0;
+while (<INFILE>) {
+   if (/T:/) {
+      $title = $title . $_;
+      $title =~ s/T: //;
+      $title =~ s/\n//;
+   }
+   if (/C:/) {
+      $auth = $auth . $_;
+      $auth =~ s/C: //;
+      $auth =~ s/\n//;
+   }
+   if (/w:/) {
+      $found += 1;
+      if ($found > $max) { $max = $found; };
+      $lyrics[$found] = $lyrics[$found] . $_;
+      $last = $_;
+	}
+   elsif (/W:/) {
+      if ((/[0-9]./) && ( $extras ne "" )) {
+     		$extras = $extras . $reallast . $_;
+      }
+      else {
+     		$extras = $extras . $_ ;
+      }
+   }
+   else {
+      if (($found > 0) && ($found < $max)) {
+         for ($i=$found+1; $i <= $max; $i++) {
+   		   $lyrics[$i] = $lyrics[$i] . $last;
+         }
+         $reallast = $last;
+         $found = $max;
+      }
+      $found=0;
+      }
+}
+
+if ( $extras ne "" ) {
+     		$extras = $extras . $reallast;
+}
+
+
+$auth =~ s/Music:/<br\/>Music:/;
+$auth =~ s/Setting:/<br\/>Setting:/;
+$auth =~ s/copyright:/<br\/>copyright:/;
+
+$outfile = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n<HTML>\n<HEAD>\n";
+$outfile = $outfile . "<META HTTP-EQUIV=\"CONTENT-TYPE\" CONTENT=\"text/html; charset=iso-8859-1\">\n";
+$outfile = $outfile . "<TITLE>Open Hymnal Project - Free Public Domain Christian Hymns - Music Scores Home</TITLE>\n";
+$outfile = $outfile . "<STYLE type=\"text/css\"> h3 {margin-bottom: 0; padding-bottom: 0} </STYLE>\n</HEAD>\n";
+$outfile = $outfile . "<BODY LANG=\"en-US\" bgcolor=\"#CBC5B9\" link=\"#0000a7\" vlink=\"#800080\" topmargin=\"0\" leftmargin=\"0\">\n";
+$outfile = $outfile . "<h3>" . ${title} . "</h3>\n<p>\n";
+for ($i=1; $i <= $max; $i++) {
+#	$lyrics[$i] =~ s/-\n//g;
+	$lyrics[$i] =~ s/\n//g;
+	$lyrics[$i] =~ s/w://g;
+ 	$lyrics[$i] =~ s/  / /g;
+	$lyrics[$i] =~ s/- //g;
+	$lyrics[$i] =~ s/_ //g;
+	$lyrics[$i] =~ s/[*] //g;
+	$lyrics[$i] =~ s/ [*]//g;
+  
+#	$lyrics[$i] =~ s/[.]/.\n/g;
+	$lyrics[$i] =~ s/\n/ /g;
+ 	$lyrics[$i] =~ s/  / /g;
+	$lyrics[$i] =~ s/~/ /;
+   $outfile = $outfile . $lyrics[$i] ."\n</p><p>\n";
+}
+
+$extras =~ s/W://g;
+$extras =~ s/w://g;
+$extras =~ s/\n/ /g;
+$extras =~ s/  / /g;
+$extras =~ s/- //g;
+$extras =~ s/_ //g;
+$extras =~ s/( [0-9].)/ \n<\/p><p>\n${1}/g;
+$extras =~ s/\n\n//;
+$outfile = $outfile . $extras . "\n</p><p><i>" . $auth . "</i></p>\n";
+$outfile = $outfile . "<table border=\"1\"><tr>\n";
+$outfile = $outfile . "<td><a href=\"../Pdf/" . $fn . ".pdf\">Pdf Image of Score</a></td>\n";
+$outfile = $outfile . "<td><a href=\"../Gif/" . $fn . ".gif\">Gif Image of Score</a></td>\n";
+$outfile = $outfile . "<td><a href=\"../Midi/" . $fn . ".mid\">Midi Audio of Tune</a></td>\n";
+$outfile = $outfile . "<td><a href=\"../Mp3/" . $fn . ".mp3\">Mp3 Audio of Tune</a></td>\n";
+$outfile = $outfile . "<td><a href=\"../Abc/" . $fn . ".abc\">Abc source</a></td>\n";
+$outfile = $outfile . "</tr></table>\n";
+$outfile = $outfile . "<a href=\"../index.html\">Open Hymnal Main Page</a>\n";
+$outfile = $outfile . "</BODY>\n</HTML>\n";
+
+$outfile =~ s/<p>\n\s*\n<\/p>//g;
+
+print $outfile;
+#print $input,"\n";
+#print $fn,"\n";
+close INFILE;

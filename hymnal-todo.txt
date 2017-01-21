@@ -1,0 +1,113 @@
+Next Priority:
+choral measure numbers in big pdf (maybe little, too)
+checks from mpronnei@gmail.com
+metrical index - online and printed
+lifetimes of various individuals
+check setting for "O Lord We Praise Thee"
+
+Then:
+Mark Trinitarian hymns?
+distribute scripts and default.fmt
+Linux Libertine throughout
+Category/author/composer tags for google searches in the html files
+ringtone-of-the-season
+start using git in earnest
+categorize easter edition
+links in sword module
+2-up script
+topic tags for google searches in the html files - check how Parables gets processed
+another closing song
+another for eternal life
+hymns for ascension
+hymn for tune "ash grove"
+hymn for tune "holy manna"
+hymn for tune "simple gifts" - maybe get new setting
+settings for "Beach Spring" and maybe "Azmon"
+
+
+Done, needs to be fully checked:
+blacklisted midi files
+bookmarks in pdf
+re-fix fermatas
+sintro, eintro
+Metrical index
+setting for Canon
+author/translator index (printed)
+composer/arranger index (printed)
+new hymns = this year, auto-generate from genindex or like genindex
+online mkpage should handle adding the current date to prevent need to update header.html and mobile-header.html
+fix "You Parents ..."
+be fully prepared for server switch-over
+scripture reference index
+
+investigate settings:
+1982 -
+FIXED - All Depends On Our Possessing
+FIXED - Hark, the Voice of Jesus Calling
+FIXED - Holy God, We Praise Thy Name
+FIXED - Jesus Christ Is Risen Today
+FIXED - O Come, All Ye Faithful
+FIXED - The Church’s One Foundation
+FIXED - What A Friend We Have In Jesus
+FIXED - What Child Is This?
+FIXED - When I Survey the Wondrous Cross
+
+1978 -
+FIXED - Open Now Thy Gates of Beauty
+
+1922:
+FIXED - Breathe on Me, Breath of God
+
+1921:
+FIXED - All Hail The Power Of Jesus’ Name
+Come Thou Fount Of Every Blessing
+
+1931:
+Comfort, Comfort Ye My People
+Jesus Came, the Heavens Adoring
+O Lord, How Shall I Meet Thee
+FIXED - The People That in Darkness Sat
+FIXED - The Star Proclaims the King is Here
+FIXED - To Jordan Came Our Lord, The Christ
+A Lamb Goes Uncomplaining Forth - quick look seems to be composite of Layriz and Brauer
+Jesus Grant That Balm and Healing
+Stricken, Smitten, and Afflicted
+Christ Jesus Lay In Death’s Strong Bands
+A Mighty Fortress Is Our God
+If God Had Not Been on Our Side (1537)
+I Come, O Savior, To Thy Table
+Jesus Christ, Our Blessed Savior (Klug)
+Today Thy Mercy Calls Me
+Rejoice, My Heart, Be Glad and Sing
+The Day is Surely Drawing Near
+Lord, Thee I Love with All My Heart
+Happy the Man Who Feareth God (Klug)
+My Jesus, As Thou Wilt
+Our Father Thou in Heaven Above
+We Now Implore God the Holy Ghost
+Now Thank We All Our God
+’Take Up Thy Cross’, the Savior Said
+We Give Thee But Thine Own
+Oh, Blest the House
+
+1906:
+Alleluia, Sing To Jesus!
+For All The Saints
+For The Beauty Of The Earth
+O Lord of Heav’n and Earth and Sea
+
+Lord, Enthroned in Heavenly Splendor
+
+lower priority:
+Lo! He Comes With Clouds Descending
+Magnificat
+Guide Me, O Thou Great Jehovah
+Lord of Glory, Who Hast Bought Us
+
+
+
+
+
+
+
+

@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Uses these scripts:
+# ohroot
+# mkgif
+#
+# and these files:
+# as-called abc file
+# 
+# it makes these files:
+# as-called gif, ps, pdf, mid, html
+#
+
+OHROOT=`ohroot`
+for i in $*
+do 
+	prep-hymn-for-inclusion.pl ${i} > temp.abc
+	${OHROOT}bin/mkgif temp.abc
+	mv temp.gif ${i%abc}gif
+	abcm2ps  -F ${OHROOT}default --combinevoices 1  -O ${i%abc}ps temp.abc
+   ps2pdf -sPAPERSIZE=letter ${i%abc}ps ${i%abc}pdf
+   rm temp.abc
+   mk-abc-for-midi ${i}
+   if [ -e temp.abc ]
+   then
+   	abc2midi temp.abc
+	   mv temp1.mid ${i%abc}mid
+   	rm temp.abc
+   elif [ -e Build-Midi/${i%.abc}-for-midi.abc ]
+   then
+   	echo "Building MIDI from handbuild abc"
+   	cp Build-Midi/${i%.abc}-for-midi.abc temp.abc
+   	abc2midi temp.abc
+	   mv temp1.mid ${i%abc}mid
+   	rm temp.abc   
+   else
+   	echo "NOT building MIDI (didn't find " Build-Midi/${i%.abc}-for-midi.abc
+   fi
+   grab-lyrics-new ${i}
+   if [ -e temp.html ]
+   then
+	   mv temp.html ${i%abc}html
+   fi
+done

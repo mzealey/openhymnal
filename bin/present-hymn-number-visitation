@@ -1,0 +1,30 @@
+#!/bin/bash
+# This script calculates the hymn number of a given hymn.  
+#
+# Uses these scripts:
+# ohroot
+# list-hymns-in-OH-visitation-order.pl
+#
+# and these files:
+# - none -
+# 
+# it makes these files:
+# - none - (writes to STDOUT)
+#
+# 13 Jan 2011
+OHROOT=`ohroot`
+
+# hymn numbers don't start at 1
+HYMN=18
+for i in `list-hymns-in-OH-visitation-order.pl` 
+do
+	IROOT=${i##*/}
+	REQROOT=${1##*/}
+	if [ 0${REQROOT} == 0${IROOT} ]
+	then
+		#echo "matches" ${i}
+		echo ${HYMN}
+	fi
+	HYMN=$((HYMN+1))
+done
+

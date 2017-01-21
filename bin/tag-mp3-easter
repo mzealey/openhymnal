@@ -1,0 +1,55 @@
+#!/bin/bash
+# Add ID3 tags to the appropriate MP3s
+#
+# Uses these scripts:
+# ohroot
+# list-hymns-in-OH-alphabetical-order.pl
+# requires program id3v2
+#
+# and these files:
+# Web/Mp3/*.mp3
+# 
+# it makes these files:
+# - none - (sent to STDOUT)
+#
+OHROOT=`ohroot`
+
+rm tagem
+#SEARCH='s|\${OHROOT}|'${OHROOT}'|;s/\\//'
+#   for i in `grep "*.pdf" ${OHROOT}bin/assemble | sed -e ${SEARCH} -`
+for N in `list-hymns-in-OH-easter-order.pl`
+   do 
+   	#echo ${i}
+   	BASE=${i##*/}
+      i=${N%abc}pdf
+      M=${i%pdf}mp3
+      M2=${OHROOT}EasterEdition/Music/${M##*/}
+      ALREADY=`id3v2 -l ${M2} | grep "The Open Hymnal Project" | wc | awk '{print $1}'`
+      ALREADY="0"
+      #echo $ALREADY    ${M2}
+      if [ $ALREADY == "0" ] 
+      then
+         T=`grep -m 1 T\: $N`
+         T2=${T:3}
+         T3=`echo ${T2} | sed -e 's/?/\\\?/g' - | sed -e 's/!/\\\!/g' - | sed -e 's/ /\\\ /g' -`
+         T4=\"${T2}\"
+         T5=`present-hymn-number ${N}`
+         #echo ${N}
+         #echo ${T2}
+         C="id3v2 --artist=\"The Open Hymnal Project\" --album=\"Easter Edition 2011\" --year=\"2011\" --genre=\"Christian Hymnody\" --song=${T4} --track=${T5} --comment \"Converted from ABC source using abc2midi, timidity++, and the soundfonts from zenvoid.org/audio.html\" ${M2}"
+#         C="id3tag --song=${T4} ${M2}"
+#      	echo "M2: "${M2}
+     	   echo $C >> tagem
+         echo ${T4}
+      fi 
+   done
+if [ -e ./tagem ]
+then
+sh ./tagem
+rm tagem
+fi
+
+if [ -e ./tagem ]
+then
+sh ./tagem
+fi

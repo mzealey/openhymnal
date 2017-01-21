@@ -1,0 +1,27 @@
+#!/bin/bash
+#######################################################################
+#     This is a script to alter a single *-core.html files, by adding
+# the header/wrapper to it.
+#
+# Uses these scripts:
+# ohroot
+#
+# and these files:
+# - Web/Lyrics/*.html
+# 
+# it makes these files:
+# - Web/Build/alllyrics-core.html
+#
+# version 1.0 06 Jan 2011 (bjd) 
+#######################################################################
+ohroot=`ohroot`;
+
+rm ${ohroot}/Web/Build/alllyrics-core.html
+echo "<h2>All Lyrics</h2>" >${ohroot}/Web/Build/alllyrics-core.html
+
+for i in ${ohroot}/Web/Lyrics/*-*.html
+do 
+	#echo ${i}
+	awk 'BEGIN{w=0};{if (w==1){if ( /jquery_jplayer/ ) w=2; else {print $0}};if ( /<BODY/ ) w=1}' ${i} >> ${ohroot}/Web/Build/alllyrics-core.html
+	echo "<hr/>" >> ${ohroot}/Web/Build/alllyrics-core.html
+done

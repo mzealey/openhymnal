@@ -1,0 +1,462 @@
+#!/usr/bin/perl
+#
+# Uses these scripts:
+# -none-
+#
+# and these files:
+# as-called abc
+# 
+# it makes these files:
+# temp.html
+#
+# changed 03 June 2013 to add mp3 player
+# changed 27 Aug 2013 to output UTF-8, since the server is sending HTTP headers saying these files are UTF-8
+# tweaks 06 Nov 2013 to fix for "O Come, All Ye Faithful"
+
+$input = $ARGV[0];
+
+# First thing, compare to blacklist
+$ohroot=`ohroot`;
+$ohroot=~ s/\n//;
+$bl = $ohroot . "bin/grab-lyrics-blacklist";
+open (BL, "<$bl");
+$infilename=$input;
+$infilename =~ s/^.*\///;
+while ( <BL> ) {
+	$_ =~ s/\n//;
+	if ( $infilename eq $_ ) {
+		print STDERR "file ".$infilename." is blacklisted against building an html\n";
+		exit;
+	}
+}
+close BL;
+
+open (INFILE, "<$input");
+@parts=split ("/",$input);
+$fn=$parts[$#parts];
+$fn=substr($fn,0,length($fn)-4);
+#print STDERR $input,"\n";
+# READ IN EVERYTHING
+$extras = "\n";
+$tags = "";
+$auth = "";
+$prehead = "";
+$stafftofind = "nevergoingtofindthis";
+$found=0;
+$max=0;
+$staff = -1;
+$startedstaves = 0;
+for ($i=0; $i < 50; $i++) { # max 50 staffs
+	$numlyrics[$i] = 0;
+}
+while (<INFILE>) {
+   if (/\\\-/) {
+   	$_ =~ s/\\\-/&mdash;/g;
+   }
+   if (/%OHTOPICS/) {
+		$tags = $_;
+		$tags =~ s/\{([^\}\(]*)[,] ([^\}]*)\}/\1 \(\2\)/g;
+		$tags =~ s/\{//g;
+		$tags =~ s/\}//g;
+		$tags =~ s/[\[][0-9,-]*[\]]//g;
+		$tags =~ s/%OHTOPICS//;
+		$tags =~ s/^\s*//g;
+		$tags =~ s/\s*$//g;
+		$tags =~ s/\s+[,]/,/g;
+   }
+   if (/T:/) {
+   	if ( length($title) > 0 ) {
+   		$title .= " ";
+   	}
+      $title = $title . $_;
+      $title =~ s/T: //;
+      $title =~ s/\n//;
+   }
+   if (/C:/) {
+      $auth = $auth . $_;
+      $auth =~ s/C: //;
+      $auth =~ s/\n//;
+   }
+   if (/w:/) {
+   	#print STDERR "staff ",$staff,"\n";
+   	#print STDERR "numlyrics[staff] ",$numlyrics[$staff],"\n";
+   	$lyr[$staff][$numlyrics[$staff]] = $_;
+   	$lyr[$staff][$numlyrics[$staff]] =~ s/\n//;
+   	$lyr[$staff][$numlyrics[$staff]] =~ s/([^ ])$/\1 /;
+   	$lyr[$staff][$numlyrics[$staff]] =~ s/^w: //;
+   	#$lyr[$staff][$numlyrics[$staff]] =~ s/[*] //g;
+   	#$lyr[$staff][$numlyrics[$staff]] =~ s/[-] //g;
+   	#$lyr[$staff][$numlyrics[$staff]] =~ s/([^\\])[-] /\1/g;
+   	#$lyr[$staff][$numlyrics[$staff]] =~ s/[\\][-]/-/g;
+   	$lyr[$staff][$numlyrics[$staff]] =~ s/^([0-9]+.)~/\1 /g;
+   	$numlyrics[$staff]++;
+   	#print STDERR "Staff ",$staff," lyrics:",$_;
+      $found += 1;
+      if ($found > $max) { $max = $found; };
+      $lyrics[$found] = $lyrics[$found] . $_;
+      $last = $_;
+	}
+   elsif (/W:/) {
+  			$_ =~ s/^W:\s*//;
+  			$_ =~ s/^([0-9]+[.])/\n\1\\t/; 
+  			$_ =~ s/^([A-Za-z'"])/\\t\1/; 
+	   	#$_ =~ s/[\\][-]/-/g;
+	   	#print STDERR "ADDING1 ",$_;
+     		$extras = $extras . $_ ;
+   }
+   elsif (/%%begintext/) {
+  			#$extras = $extras . $_ ;
+  			if ( $startedstaves == 1 ) {
+	  			$_ = <INFILE>;
+	   		while ( ! /%%endtext/ ) {
+	   			$_ =~ s/^%% //;
+	   			$_ =~ s/^%%//;
+			   	#$_ =~ s/[\\][-]/-/g;
+	   	#print STDERR "ADDING2 ",$_;
+	     			$extras = $extras . $_ ;
+		  			$_ = <INFILE>;
+	     		}
+     		}
+     		else {
+	  			$_ = <INFILE>;
+	   		while ( ! /%%endtext/ ) {
+	   			$_ =~ s/^%% //;
+	   			$_ =~ s/^%%//;
+			   	#$_ =~ s/[\\][-]/-/g;
+	     			$prehead = $prehead . $_ ;
+		  			$_ = <INFILE>;
+	     		}
+     		}
+   }
+   else {
+   	if ( /\[V\: S/ && $staff == -1 ) {
+   		$stafftofind = $_;
+   		$stafftofind =~ s/\].*$/\]/;
+   		$stafftofind =~ s/^.*\[/\[/;
+   		$stafftofind =~ s/\n//;
+   		#$stafftofind =~ s/[:]/\[:\]/;
+   		#$stafftofind =~ s/\]$/\[\\\]\]/;
+   		#$stafftofind =~ s/^\[/\[\\\[\]/;
+   		#print STDERR "lyrics after ",$stafftofind,"\n";
+   	}
+   	
+   	if ( index ($_, $stafftofind) >= 0 ) {
+   		$staff++;
+   		#print STDERR "new staff ",$_,"\n";
+   		$startedstaves = 1;
+   	}
+   	#elsif ( length($stafftofind) < 20 ) {
+   	#	print STDERR "rejected {",$_,"}\nsearch is {",$stafftofind,"}index is ",index ($_, $stafftofind),"\n";
+   	#}
+   	
+      if (($found > 0) && ($found < $max)) {
+         for ($i=$found+1; $i <= $max; $i++) {
+   		   $lyrics[$i] = $lyrics[$i] . $last;
+         }
+         $reallast = $last;
+         $found = $max;
+      }
+      $found=0;
+      }
+}
+
+$maxlyr = $numlyrics[0];
+for ($i=0; $i <= $staff; $i++) { 
+	if ( $numlyrics[$i] > $maxlyr) {
+		$maxlyr = $numlyrics[$i];
+	}
+}
+	#print STDERR "maxlyr is ",$maxlyr,"\n";
+
+
+for ($i=0; $i <= $staff; $i++) { 
+	if (( $numlyrics[$i] != $maxlyr) && ( $numlyrics[$i] != 1 )) {
+		print STDERR "WARNING FOR STAFF ",$i+1," - THINGS LOOK TOO WEIRD, EXITING ",$input,"\n";
+		print STDERR "<META name=\"keywords\" content=\"Free, Public Domain, Christian Hymns, Music Scores, Midi, ".$tags."\">\n";
+		print STDERR "<title>Open Hymnal Project: " . ${title} . "</title>\n";
+		
+		exit;
+	}
+}
+#print STDERR "reallast\n",$reallast;
+if ( $extras ne "\n" ) {
+     		$extras = $extras; # . $reallast;
+     		#print STDERR "EXTRAS\n",$extras;
+     		# if extras begin with [0-9] or \t, then it's a verse.  Otherwise, a comment or heading
+     		# a comment is after all verses, a heading is at the top or in the middle
+     		$vnum = 0; #should this be 0 or $maxlyr?
+     		while ( length($extras) > 0 ) {
+	     		#print STDERR "search for {",$vnum+$maxlyr+1,".} in extras.\n";
+   	  		$next = $vnum+$maxlyr+1;
+   	  		$string = "\n[ ]*" . $next . "[.]";
+   	  		#print STDERR "\n-----------------------\n",$string,"\n";
+   	 		@parts = split $string, $extras;
+   	  		#print STDERR "\n",$vnum+$maxlyr," --> ",$parts[0],"\n-----------------------\n";
+   	  		# if \n\t, then line is verse, otherwise header for following or comment
+   	  		$versepart = $parts[0];
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		$versepart =~ s/\n[^\\].*$//;
+   	  		if ( $versepart ne $parts[0] ) {
+   	  			$versepart .= "\n";
+   	  		}
+   	  		$versepart =~ s/\\t/ /g;
+   	  		$versepart =~ s/  / /g;
+   	  		$versepart =~ s/  / /g;
+   	  		$versepart =~ s/  / /g;
+   	  		$versepart =~ s/  / /g;
+   	  		$versepart =~ s/\n//g;
+   	  		$lateverses[$vnum+$maxlyr] = $versepart;
+   	  		#print STDERR "\n",$vnum+$maxlyr," --> ",$versepart,"\n-----------------------\n";
+    	  		$headerpart = $parts[0];
+    	  		# chop off part matching $versepart
+   	  		$headerpart =~ s/^.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*\n//;
+   	  		$headerpart =~ s/^\\.*$//;
+   	  		$headerpart =~ s/\n/ /g;
+   	  		$headerpart =~ s/  / /g;
+   	  		$headerpart =~ s/^ //g;
+   	  		#print STDERR "\nHEADER ",$vnum+$maxlyr," --> ",$headerpart,"\n-----------------------\n";
+	  	  		$header[$vnum+$maxlyr] = $headerpart;
+   	  		$vnum++;
+   	  		$extras = $parts[1];
+   	  		if( length($parts[2]) > 0 ) {
+   	  			print STDERR "\n\nWARNING ON EXTRAS!!!!!\n\n";
+   	  		}
+     		}
+}
+else {$vnum = 1;}
+
+# FIGURE OUT STAFF THAT SWITCHES FROM VERSES TO REFRAIN
+# ends in [*]\s+[*]\s+[*]\s?$
+for ($j=$maxlyr-1; $j >= 0; $j--) { 
+	for ($i=0; $i <= $staff; $i++) { 
+		$_ = $lyr[$i][$j];
+		if ( /[*]\s+[*]\s+[*]\s?$/ ) {
+			print STDERR "DANGER Verse ",$j+1,", trying to auto-fix ",$input,"!\n";
+#print STDERR "{$i [$j ]}",$lyr[$i][$j],"\n";
+			$temp = $_;
+			$temp =~ s/^.*[^* ]([* ]*)$/\1/;
+			$temp =~ s/^\s*//;
+			$temp =~ s/[-]\s*$//;
+			$temp =~ s/\s*$//;
+			$temp =~ s/  / /g;
+			$temp =~ s/  / /g;
+			$temp =~ s/  / /g;
+			$temp =~ s/  / /g;
+			$replace = $temp;
+#print STDERR "SYL",$temp,"\n";
+			$syllables = (length($temp)+1)/2;
+			$temp = $lyr[$i][0];
+			$temp =~ s/^\s*//;
+			#$temp =~ s/[-]\s*$//;
+			$temp =~ s/\s*$//;
+			$temp =~ s/  / /g;
+			$temp =~ s/  / /g;
+			$temp =~ s/  / /g;
+			$temp =~ s/  / /g;
+#print STDERR "TEMP",$temp," --- ",$syllables," syllables\n";
+			$string = " ";
+			for ($k=0; $k < $syllables; $k++) {
+				$string .= "[^ ]* ";
+			}
+			$string =~ s/ $/[-]?\s?/;
+			$string =~ s/ $/\s?/;
+#print STDERR "STRING",$string,"\n";
+			$temp =~ s/^.*($string)/\1/g;
+			$temp =~ s/^ //;
+#print STDERR "TEMP",$temp,"\n";
+			# grab $syllables
+			$replace =~ s/[*]/[*]/g;
+			$replace =~ s/[ ]/\\\s*/g;
+#print STDERR "REPLACE",$replace,"\n";
+			#$temp =~ s/[*]/[*]/g;
+			#$temp =~ s/([,.;:!-])/\\\1/g;
+			#print STDERR $temp,"] should replace [",$replace,"]\n";
+			#print STDERR $lyr[$i][$j],"\n";
+			#print STDERR "s/$replace/$temp/","\n";
+			$lyr[$i][$j] =~ s/$replace/$temp/;
+#print STDERR "{$i [$j ]}",$lyr[$i][$j],"\n";
+			#$lyr[$i][$j] =~ s/  / /g;
+			$lyr[$i][$j] =~ s/[*] //g;
+			$lyr[$i][$j] =~ s/ $//;
+			$lyr[$i][$j] =~ s/[-] //g;
+			$lyr[$i][$j] =~ s/[_]//g;
+			$lyr[$i][$j] =~ s/([^ ])$/\1 /g;
+#print STDERR "{$i [$j ]}",$lyr[$i][$j],"\n";
+		}
+		else {
+			#$lyr[$i][$j] =~ s/  / /g;
+			$lyr[$i][$j] =~ s/[*] //g;
+			$lyr[$i][$j] =~ s/[-] //g;
+			$lyr[$i][$j] =~ s/[_]//g;
+		}
+	}
+}
+
+#exit;
+
+for ($j=0; $j < $maxlyr; $j++) { 
+	$verse[$j+1] = "";
+	#print STDERR "Verse ",$j+1,"\n";
+	for ($i=0; $i <= $staff; $i++) { 
+		if ( $j < $numlyrics[$i] ) {
+			#$lyr[$i][$j] =~ s/  / /g;
+			$lyr[$i][$j] =~ s/[*] //g;
+			#$lyr[$i][$j] =~ s/[-] //g;
+			$verse[$j+1] .= $lyr[$i][$j];
+			#print STDERR $lyr[$i][$j],"\n";
+			#print STDERR "[[","$j]]",$verse[$j+1],"\n"
+		}
+		else {
+			#$lyr[$i][$j] =~ s/  / /g;
+			$lyr[$i][$j] =~ s/[*] //g;
+			$lyr[$i][$j] =~ s/[-] //g;
+			$verse[$j+1] .= $lyr[$i][0];
+			#print STDERR $lyr[$i][0],"\n";
+			#print STDERR "[","$j]",$verse[$j+1],"\n"
+		}
+	}
+$verse[$j+1]  =~ s/[-] //g;
+	$numlyrics[$i] = 0;
+	#print STDERR "[$j]",$verse[$j+1],"\n"
+}
+for ($j=1; $j < $vnum; $j++) { 
+	$verse[$j+$maxlyr] = $j+$maxlyr.".".$lateverses[$j+$maxlyr];
+	#print STDERR "[$j]",$verse[$j+$maxlyr],"\n"
+}
+
+if ( length($prehead) > 0 ) {
+#	print STDERR "<h3>",$prehead,"</h3>\n";
+}
+for ($j=0; $j < $vnum+$maxlyr-1; $j++) { 
+	if ( length($header[$j]) > 0 ) {
+#		print STDERR "<h3>",$header[$j],"</h3>\n";
+	}
+#	print STDERR "<p>",$verse[$j+1],"</p>\n";
+}
+if ( length($header[$vnum+$maxlyr-1]) > 0 ) {
+#	print STDERR "<p></p>\n<p>",$header[$vnum+$maxlyr-1],"</p>\n";
+}
+
+
+$auth =~ s/Music:/<br\/>Music:/;
+$auth =~ s/Setting:/<br\/>Setting:/;
+$auth =~ s/copyright:/<br\/>copyright:/;
+
+$outfile = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n<HTML>\n<HEAD>\n";
+$outfile = $outfile . "<META HTTP-EQUIV=\"CONTENT-TYPE\" CONTENT=\"text/html; charset=UTF-8\">\n";
+$outfile = $outfile . "<META name=\"keywords\" content=\"Free, Public Domain, Christian Hymns, Music Scores, Midi, ".$tags."\">\n";
+$outfile = $outfile . "<title>Open Hymnal Project: " . ${title} . "</title>\n";
+$outfile = $outfile . "<STYLE type=\"text/css\"> h3 {margin-bottom: 0; padding-bottom: 0} </STYLE>\n";
+$outfile = $outfile . "<link type=\"text/css\" href=\"/skin/jplayer.blue.monday.css\" rel=\"stylesheet\" />\n";
+$outfile = $outfile . "<script type=\"text/javascript\" src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js\"></script>\n";
+$outfile = $outfile . "<script type=\"text/javascript\" src=\"/js/jquery.jplayer.min.js\"></script>\n";
+$outfile = $outfile . "<script type=\"text/javascript\">\n    \$(document).ready(function(){\n      \$\(\"#jquery_jplayer_1\").jPlayer({\n";
+$outfile = $outfile . "        ready: function () {\n          \$(this).jPlayer(\"setMedia\", {\n            mp3: \"/Mp3/";
+$outfile = $outfile . $fn . ".mp3\"\n          });\n        },\n        swfPath: \"/js\",\n        supplied: \"mp3\"\n      });\n    });\n</script>\n";
+
+$outfile = $outfile . "</HEAD>\n";
+$outfile = $outfile . "<BODY LANG=\"en-US\" bgcolor=\"#CBC5B9\" link=\"#0000a7\" vlink=\"#800080\" topmargin=\"0\" leftmargin=\"0\">\n";
+$outfile = $outfile . "<h3>" . ${title} . "</h3>\n";
+if ( length($prehead) > 0 ) {
+	$outfile .= "<h3>".$prehead."</h3>\n";
+}
+for ($j=0; $j < $vnum+$maxlyr-1; $j++) { 
+	if ( length($header[$j]) > 0 ) {
+		$outfile .= "<h3>".$header[$j]."</h3>\n";
+	}
+	$outfile .= "<p>\n".$verse[$j+1]."\n</p>";
+}
+if ( length($header[$vnum+$maxlyr-1]) > 0 ) {
+	$outfile .= "<p></p>\n<p>".$header[$vnum+$maxlyr-1]."</p>\n";
+}
+
+$outfile = $outfile . "<p><i>" . $auth . "</i></p>\n";
+$outfile = $outfile . "  <div id=\"jquery_jplayer_1\" class=\"jp-jplayer\"></div>";
+$outfile = $outfile . "  <div id=\"jp_container_1\" class=\"jp-audio\">";
+$outfile = $outfile . "    <div class=\"jp-type-single\">";
+$outfile = $outfile . "      <div class=\"jp-gui jp-interface\">";
+$outfile = $outfile . "        <ul class=\"jp-controls\">";
+$outfile = $outfile . "          <li><a href=\"javascript:;\" class=\"jp-play\" tabindex=\"1\">play</a></li>";
+$outfile = $outfile . "          <li><a href=\"javascript:;\" class=\"jp-pause\" tabindex=\"1\">pause</a></li>";
+$outfile = $outfile . "          <li><a href=\"javascript:;\" class=\"jp-stop\" tabindex=\"1\">stop</a></li>";
+$outfile = $outfile . "          <li><a href=\"javascript:;\" class=\"jp-mute\" tabindex=\"1\" title=\"mute\">mute</a></li>";
+$outfile = $outfile . "          <li><a href=\"javascript:;\" class=\"jp-unmute\" tabindex=\"1\" title=\"unmute\">unmute</a></li>";
+$outfile = $outfile . "          <li><a href=\"javascript:;\" class=\"jp-volume-max\" tabindex=\"1\" title=\"max volume\">max volume</a></li>";
+$outfile = $outfile . "        </ul>";
+$outfile = $outfile . "        <div class=\"jp-progress\">";
+$outfile = $outfile . "          <div class=\"jp-seek-bar\">";
+$outfile = $outfile . "            <div class=\"jp-play-bar\"></div>";
+$outfile = $outfile . "          </div>";
+$outfile = $outfile . "        </div>";
+$outfile = $outfile . "        <div class=\"jp-volume-bar\">";
+$outfile = $outfile . "          <div class=\"jp-volume-bar-value\"></div>";
+$outfile = $outfile . "        </div>";
+$outfile = $outfile . "        <div class=\"jp-time-holder\">";
+$outfile = $outfile . "          <div class=\"jp-current-time\"></div>";
+$outfile = $outfile . "          <div class=\"jp-duration\"></div>";
+$outfile = $outfile . "          <ul class=\"jp-toggles\">";
+$outfile = $outfile . "            <li><a href=\"javascript:;\" class=\"jp-repeat\" tabindex=\"1\" title=\"repeat\">repeat</a></li>";
+$outfile = $outfile . "            <li><a href=\"javascript:;\" class=\"jp-repeat-off\" tabindex=\"1\" title=\"repeat off\">repeat off</a></li>";
+$outfile = $outfile . "          </ul>";
+$outfile = $outfile . "        </div>";
+$outfile = $outfile . "      </div>";
+$outfile = $outfile . "      <div class=\"jp-title\"></div>";
+$outfile = $outfile . "      <div class=\"jp-no-solution\">";
+$outfile = $outfile . "        <span>Update Required</span>";
+$outfile = $outfile . "        To play the media you will need to either update your browser to a recent version or update your <a href=\"http://get.adobe.com/flashplayer/\" target=\"_blank\">Flash plugin</a>.";
+$outfile = $outfile . "      </div>";
+$outfile = $outfile . "    </div>";
+$outfile = $outfile . "  </div>";
+$outfile = $outfile . "<p>";
+
+$outfile = $outfile . "<table border=\"1\" cellpadding=\"15\"><tr>\n";
+#$outfile = $outfile . "<table border=\"1\"><tr>\n";
+$outfile = $outfile . "<td><a href=\"../Pdf/" . $fn . ".pdf\">Pdf Image of Score</a></td>\n";
+$outfile = $outfile . "<td><a href=\"../Gif/" . $fn . ".gif\">Gif Image of Score</a></td>\n";
+$outfile = $outfile . "<td><a href=\"../Midi/" . $fn . ".mid\">Midi Audio of Tune</a></td>\n";
+$outfile = $outfile . "<td><a href=\"../Mp3/" . $fn . ".mp3\">Mp3 Audio of Tune</a></td>\n";
+$outfile = $outfile . "<td><a href=\"../Abc/" . $fn . ".abc\">Abc source</a></td>\n";
+$outfile = $outfile . "</tr></table>\n</p>\n";
+$outfile = $outfile . "<a href=\"../index.html\">Open Hymnal Main Page</a>\n";
+$outfile = $outfile . "</BODY>\n</HTML>\n";
+
+$outfile =~ s/<p>\n\s*\n<\/p>//g;
+
+open OUTFILE, "> temp.html";
+print OUTFILE $outfile;
+#print $input,"\n";
+#print $fn,"\n";
+close INFILE;
+close OUTFILE;
+system "iconv --from-code=ISO-8859-1 --to-code=UTF-8 temp.html > /tmp/buildoh";
+system "mv /tmp/buildoh temp.html";

@@ -1,0 +1,17 @@
+#!/bin/bash
+OHROOT=`ohroot`
+PG=22 # really only matters if this is odd or even
+OLDSEC="Intro"
+
+for i in `list-hymns-in-OH-order.pl` 
+do
+	ADD=`numpages-in-hymn.pl ${i}`
+	SHORT=${i##*/}
+	if [ $((ADD>1)) == "1" ]
+	then
+		#echo ${SEC} ${HYMN} ${PG} ${i}
+		echo ${SHORT} ${PG}
+	fi
+	PG=$((PG+ADD))
+done
+

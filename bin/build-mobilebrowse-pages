@@ -1,0 +1,196 @@
+#!/usr/bin/perl
+# This script build the Open Hymnal mobile web site browse (for all hymns) files from the basic site.
+#
+# Uses these scripts:
+# ohroot
+#
+# and these files:
+# Web/Build/genindex-core.html
+# 
+# it makes these files:
+# Web/Build/mobile-title-core.html
+# Web/Build/mobile-author-core.html
+# Web/Build/mobile-tune-core.html
+# Web/Build/mobile-composer-core.html
+#
+# 07 Jan 2011
+$ohroot=`ohroot`;
+$ohroot=~ s/\n//;
+
+$path = "< " . $ohroot . "Web/Build/genindex-core.html";
+open ( INPUT , $path );
+
+$file = "";
+while ( <INPUT> ) {
+	$file .= $_;
+}
+close INPUT;
+
+
+$path = "> " . $ohroot . "Web/Build/mobile-title-core.html";
+open ( OUTTITLE, $path );
+
+@parts = split ( "[<][/]?tbody[>]" , $file ); 
+
+#print $parts[2];
+#exit;
+
+$start = 0;
+print OUTTITLE "<h1>Browse the OpenHymnal by Title</h1>\n\t";
+for ($tablenum=1; $tablenum<=5;$tablenum+=2) {
+$table = $parts[$tablenum];
+@entries = split ( "<\/tr>[\n\t ]*<tr[^>]*>" , $table );
+#print STDERR "***********************\n$tablenum\n";
+#print STDERR $entries[1];
+
+for ($i=0; $i<@entries; $i++){
+#for ($i=0; $i<2; $i++){
+	@segments = split ( "<td>" , $entries[$i] );
+   $title[$i+$start] = $segments[1];
+   $title[$i+$start] =~ s/<\/td>//;
+   $title[$i+$start] =~ s/<p[^>]*>//;
+   $title[$i+$start] =~ s/<a[^>]*>//;
+   $title[$i+$start] =~ s/<\/p>//;
+   $title[$i+$start] =~ s/<\/a>//;
+   $title[$i+$start] =~ s/^[\n\t ]*//;
+   $title[$i+$start] =~ s/[\n\t ]*$//;
+   #print $title[$i+$start],"\n";
+	if ( length ( $title[$i+$start] ) > 0 ) {
+      $author[$i+$start] = $segments[3];
+      $author[$i+$start] =~ s/<\/td>//;
+      $author[$i+$start] =~ s/<p[^>]*>//;
+      $author[$i+$start] =~ s/<a[^>]*>//;
+      $author[$i+$start] =~ s/<\/p>//;
+      $author[$i+$start] =~ s/<\/a>//;
+      $author[$i+$start] =~ s/^[\n\t ]*//;
+      $author[$i+$start] =~ s/[\n\t ]*$//;
+      #print $author[$i+$start],"\n";
+      $link[$i+$start] = $segments[1];
+      $link[$i+$start] =~ s/<\/td>//;
+      $link[$i+$start] =~ s/<p[^>]*>//;
+      $link[$i+$start] =~ s/<\/p>//;
+      $link[$i+$start] =~ s/^[\n\t ]*//;
+      $link[$i+$start] =~ s/[\n\t ]*$//;
+      $link[$i+$start] =~ s/<a href="javascript:new_window[(]'//;
+      $link[$i+$start] =~ s/'[)]">.*//;
+      #print $link[$i+$start],"\n";
+      $tune[$i+$start] = $segments[4];
+      $tune[$i+$start] =~ s/<\/td>//;
+      $tune[$i+$start] =~ s/<p[^>]*>//;
+      $tune[$i+$start] =~ s/<a[^>]*>//;
+      $tune[$i+$start] =~ s/<\/p>//;
+      $tune[$i+$start] =~ s/<\/a>//;
+      $tune[$i+$start] =~ s/^[\n\t ]*//;
+      $tune[$i+$start] =~ s/[\n\t ]*$//;
+      #print $tune[$i+$start],"\n";
+      $composer[$i+$start] = $segments[5];
+      $composer[$i+$start] =~ s/<\/td>//;
+      $composer[$i+$start] =~ s/<p[^>]*>//;
+      $composer[$i+$start] =~ s/<a[^>]*>//;
+      $composer[$i+$start] =~ s/<\/p>//;
+      $composer[$i+$start] =~ s/<\/a>//;
+      $composer[$i+$start] =~ s/^[\n\t ]*//;
+      $composer[$i+$start] =~ s/[\n\t ]*$//;
+      #print $composer[$i+$start],"\n","\n","\n";
+      print OUTTITLE '<div style="margin-bottom: 5; padding-bottom: 5; margin-top: 5; padding-top: 5; margin-right: 5; padding-right: 5; margin-left: 5; padding-left: 5; font-size:20pt">',"\n",'<a href="',$link[$i+$start],'"><p>',$title[$i+$start],"  (", $tune[$i+$start], ")</p></a>\n</div>","\n\n";
+   }
+}
+$start+=$i;
+print OUTTITLE "\n";
+if ($tablenum == 1) {
+print OUTTITLE "\n<h1>Choir/Instrumental Pieces</h1>\n\n";
+}
+elsif ($tablenum == 3) {
+print OUTTITLE "\n<h1>Bonus Carol</h1>\n\n";
+}
+#print STDERR $start,"\n";
+$parts[$tablenum+1] = "<\/tr>" . $parts[$tablenum+1];
+}
+$start+= 1;
+close OUTTITLE;
+#exit;
+
+# SORT BY AUTHOR
+$lastauth="zzzzzzzzzzzzz";
+$numtofind = 0;
+$path = "> " . $ohroot . "Web/Build/mobile-author-core.html";
+open ( OUTAUTHOR, $path );
+print OUTAUTHOR "<h1>Browse the OpenHymnal by Author</h1>\n\t<p>\n";
+for ($i=0; $i<$start; $i++){
+	$place[$i] = -1;
+   if ( length ( $title[$i] ) > 0 ) {
+   	$numtofind++;
+   }
+}
+for ($i=0; $i<$numtofind; $i++){
+	for ($j=0; $j<$start; $j++){
+   	if ( ( $author[$j] le $lastauth ) && ( $place[$j] == -1 ) && ( length ( $title[$j] ) > 0 ) ) {
+      	$next = $j;
+         $lastauth = $author[$j];
+      }
+		#print $lastauth, "  ", $title[$next], "\n";
+   }
+   $place[$next] = $i;
+	#print $i,": ",$lastauth, "  (", $title[$next], ")\n";
+   print OUTAUTHOR '<div style="margin-bottom: 5; padding-bottom: 5; margin-top: 5; padding-top: 5; margin-right: 5; padding-right: 5; margin-left: 5; padding-left: 5; font-size:20pt">',"\n",'<a href="',$link[$next],'"><p>',$author[$next],"  (", $title[$next], ")</p></a>\n</div>","\n\n";
+   $lastauth="z";
+}
+print OUTAUTHOR "<\/p>\n";
+close OUTAUTHOR;
+
+# SORT BY TUNE
+$lastauth="zzzzzzzzzzzzz";
+$numtofind = 0;
+$path = "> " . $ohroot . "Web/Build/mobile-tune-core.html";
+open ( OUTTUNE, $path );
+print OUTTUNE "<h1>Browse the OpenHymnal by Tune</h1>\n\t<p>\n";
+for ($i=0; $i<$start; $i++){
+	$place[$i] = -1;
+   if ( length ( $title[$i] ) > 0 ) {
+   	$numtofind++;
+   }
+}
+for ($i=0; $i<$numtofind; $i++){
+	for ($j=0; $j<$start; $j++){
+   	if ( ( $tune[$j] le $lastauth ) && ( $place[$j] == -1 ) && ( length ( $title[$j] ) > 0 ) ) {
+      	$next = $j;
+         $lastauth = $tune[$j];
+      }
+		#print $lastauth, "  ", $title[$next], "\n";
+   }
+   $place[$next] = $i;
+	#print $i,": ",$lastauth, "  (", $title[$next], ")\n";
+   print OUTTUNE '<div style="margin-bottom: 5; padding-bottom: 5; margin-top: 5; padding-top: 5; margin-right: 5; padding-right: 5; margin-left: 5; padding-left: 5; font-size:20pt">',"\n",'<a href="',$link[$next],'"><p>',$tune[$next],"  (", $title[$next], ")</p></a>\n</div>","\n\n";
+   $lastauth="z";
+}
+print OUTTUNE "<\/p>\n";
+close OUTTUNE;
+
+# SORT BY COMPOSER
+$lastauth="zzzzzzzzzzzzz";
+$numtofind = 0;
+$path = "> " . $ohroot . "Web/Build/mobile-composer-core.html";
+open ( OUTCOMPOSER, $path );
+print OUTCOMPOSER "<h1>Browse the OpenHymnal by Composer</h1>\n\t<p>\n";
+for ($i=0; $i<$start; $i++){
+	$place[$i] = -1;
+   if ( length ( $title[$i] ) > 0 ) {
+   	$numtofind++;
+   }
+}
+for ($i=0; $i<$numtofind; $i++){
+	for ($j=0; $j<$start; $j++){
+   	if ( ( $composer[$j] le $lastauth ) && ( $place[$j] == -1 ) && ( length ( $title[$j] ) > 0 ) ) {
+      	$next = $j;
+         $lastauth = $composer[$j];
+      }
+		#print $lastauth, "  ", $title[$next], "\n";
+   }
+   $place[$next] = $i;
+	#print $i,": ",$lastauth, "  (", $title[$next], ")\n";
+   print OUTCOMPOSER '<div style="margin-bottom: 5; padding-bottom: 5; margin-top: 5; padding-top: 5; margin-right: 5; padding-right: 5; margin-left: 5; padding-left: 5; font-size:20pt">',"\n",'<a href="',$link[$next],'"><p>',$composer[$next],"  (", $title[$next], ")</p></a>\n</div>","\n\n";
+   $lastauth="z";
+}
+print OUTCOMPOSER "<\/p>\n";
+close OUTCOMPOSER;
+exit;

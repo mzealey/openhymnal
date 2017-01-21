@@ -1,0 +1,42 @@
+#!/bin/bash
+PAGES=`pdfinfo ${1} | grep Pages | awk '{print $2}'`
+SHEETSECTION=${2}
+NUMSECTIONS=$((PAGES/4/SHEETSECTION))
+echo ${PAGES} pages divided into ${NUMSECTIONS} sections of ${SHEETSECTION} sheets
+#PATTERN="28,1,2,27,26,3,4,25,24,5,6,23,22,7,8,21,20,9,10,19,18,11,12,17,16,13,14,15"
+#         28,1,2,27,26,3,4,25,24,5,6,23,22,7,8,21,20,9,10,19,18,11,12,17,16,13,14,15
+
+j=1
+PATTERN=""
+DONE="0"
+for i in `shownumrev $((SHEETSECTION*2)) ${SHEETSECTION}`
+do
+	if [ ${DONE} == "0" ]
+	then
+		PATTERN=${PATTERN}$((i*2)),${j},$((j+1)),$((i*2-1))
+		j=$((j+2))
+		if [ $((j > i*2-2)) == "1" ] 
+		then
+			PATTERN=${PATTERN//,/ }
+			echo Pattern is ${PATTERN}
+			DONE="1"
+			#echo exitting ${j} and ${i}
+		
+		else
+			PATTERN=${PATTERN},
+		fi
+	fi
+done
+
+LIST=""
+for i in `shownum 0 $((NUMSECTIONS-1))`
+do
+	for j in ${PATTERN}
+	do
+		LIST=${LIST}$((i*SHEETSECTION*4+j))","
+	done
+	#echo
+done
+LIST=${LIST%,}
+
+pdfnup --paper legalpaper --twoside --outfile test.pdf ${1} ${LIST}

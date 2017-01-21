@@ -1,0 +1,3 @@
+#!/bin/bash
+OHROOT=`ohroot`
+grep -h "%OHTOPIC" ${OHROOT}Complete/*/*.abc | sort -u > tmp1;grep -h "%OHTOPIC" ${OHROOT}Complete/*/*.abc | sort > tmp2;diff tmp1 tmp2

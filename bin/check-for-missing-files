@@ -1,0 +1,103 @@
+#!/bin/bash
+OHROOT=`ohroot`
+
+echo "------------------------------------------------------------------"
+echo "CHECKING FILE MATCHES"
+echo "------------------------------------------------------------------"
+echo "CHECKING ABC FILES"
+for i in `list-hymns-in-OH-alphabetical-order.pl` 
+do
+	FULLFN=`echo -n ${i/\\\n/}`
+	if [ ${OHROOT}/Web/Abc/${FULLFN##*\/} ]
+	then
+		diff -q ${FULLFN} ${OHROOT}/Web/Abc/${FULLFN##*\/}
+		echo -n ""
+	else
+		echo "MISSING! "${OHROOT}/Web/Abc/${FULLFN##*\/}
+	fi	
+done
+
+echo "CHECKING GIF FILES"
+for i in `list-hymns-in-OH-alphabetical-order.pl` 
+do
+	FULLFNTMP=`echo -n ${i/\\\n/}`
+	FULLFN=`echo -n ${FULLFNTMP%abc}gif`
+	if [ ${OHROOT}/Web/Gif/${FULLFN##*\/} ]
+	then
+		diff -q ${FULLFN} ${OHROOT}/Web/Gif/${FULLFN##*\/}
+		echo -n ""
+	else
+		echo "MISSING! "${OHROOT}/Web/Gif/${FULLFN##*\/}
+	fi	
+done
+
+echo "CHECKING PDF FILES"
+for i in `list-hymns-in-OH-alphabetical-order.pl` 
+do
+	FULLFNTMP=`echo -n ${i/\\\n/}`
+	FULLFN=`echo -n ${FULLFNTMP%abc}pdf`
+	if [ ${OHROOT}/Web/Pdf/${FULLFN##*\/} ]
+	then
+		diff -q ${FULLFN} ${OHROOT}/Web/Pdf/${FULLFN##*\/}
+		echo -n ""
+	else
+		echo "MISSING! "${OHROOT}/Web/Pdf/${FULLFN##*\/}
+	fi	
+done
+
+echo "CHECKING HTML FILES"
+for i in `list-hymns-in-OH-alphabetical-order.pl` 
+do
+	FULLFNTMP=`echo -n ${i/\\\n/}`
+	FULLFN=`echo -n ${FULLFNTMP%abc}html`
+	if [ ${OHROOT}/Web/Lyrics/${FULLFN##*\/} ]
+	then
+		diff -q ${FULLFN} ${OHROOT}/Web/Lyrics/${FULLFN##*\/}
+		echo -n ""
+	else
+		echo "MISSING! "${OHROOT}/Web/Lyrics/${FULLFN##*\/}
+	fi	
+done
+
+echo "CHECKING MIDI FILES"
+for i in `list-hymns-in-OH-alphabetical-order.pl` 
+do
+	FULLFNTMP=`echo -n ${i/\\\n/}`
+	FULLFN=`echo -n ${FULLFNTMP%abc}mid`
+	if [ ${OHROOT}/Web/Midi/${FULLFN##*\/} ]
+	then
+		diff -q ${FULLFN} ${OHROOT}/Web/Midi/${FULLFN##*\/}
+		echo -n ""
+	else
+		echo "MISSING! "${OHROOT}/Web/Midi/${FULLFN##*\/}
+	fi	
+done
+
+echo "------------------------------------------------------------------"
+echo "CHECKING ORPHAN FILES"
+echo "------------------------------------------------------------------"
+for i in ${OHROOT}/Web/Abc/*.abc ${OHROOT}/Web/Gif/*.gif ${OHROOT}/Web/Lyrics/*.html ${OHROOT}/Web/Pdf/*.pdf ${OHROOT}/Web/Midi/*.mid
+do
+	FULLFN=`echo -n ${i/\\\n/}`
+	if [ ! -f ${OHROOT}/Complete/*/${FULLFN##*\/} ]
+	then
+		if [ ! -f ${OHROOT}/Choir/*/${FULLFN##*\/} ]
+		then
+			if [ ! -f ${OHROOT}/Bonus/*/${FULLFN##*\/} ]
+			then
+				echo "FILE "${FULLFN}" HAS NO COUNTERPART"
+			fi
+		fi
+	fi	
+done
+
+echo "------------------------------------------------------------------"
+echo "CHECKING ROUGE FILES"
+echo "------------------------------------------------------------------"
+for i in ${OHROOT}Complete/*/*.gif ${OHROOT}Choir/*/*.gif;do if [ ! -f ${i%gif}abc ]; then echo ${i};fi;done
+for i in ${OHROOT}Complete/*/*.mid ${OHROOT}Choir/*/*.mid;do if [ ! -f ${i%mid}abc ]; then echo ${i};fi;done
+for i in ${OHROOT}Complete/*/*.html ${OHROOT}Choir/*/*.html;do if [ ! -f ${i%html}abc ]; then echo ${i};fi;done
+for i in ${OHROOT}Complete/*/*.pdf ${OHROOT}Choir/*/*.pdf;do if [ ! -f ${i%pdf}abc ]; then echo ${i};fi;done
+
+
+

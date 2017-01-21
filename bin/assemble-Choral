@@ -1,0 +1,47 @@
+#!/bin/bash
+# This script build the Open Hymnal Choral Edition big pdf by making one big abc file, compiling it, then adding indices/title pages/etc.
+#
+# Uses these scripts:
+# ohroot
+# choral-hymns-in-OH-choral-order.pl
+# prep-hymn-for-inclusion.pl
+# update-pdf
+# present-hymn-number-choral
+#
+# and these files:
+# Choral/2010Christmasindex.pdf
+#
+# 
+# it makes these files:
+# OpenHymnalChoral2012.pdf
+# (as temp files) choral-pdf.abc, choral-pdf.ps, choral-pdf.pdf
+#
+# Version 1.0 07 Jan 2011 reworked from old semi-by-hand assembly method that stitched individual pdfs
+# Version 1.1 13 Jan 2011 to use the script present-hymn-number
+# Version 1.2 22 Jan 2013 modified from Christmas edition script for Choral edition
+OHROOT=`ohroot`
+
+if [ -e choral-pdf.abc ]
+then
+	rm choral-pdf.abc
+fi
+
+PG=2 # really only matters if this is odd or even
+
+for i in `list-hymns-in-OH-choral-order.pl` 
+do
+	HYMN=`present-hymn-number-choral ${i}`
+	prep-hymn-for-inclusion.pl ${i} ${HYMN} ${PG} >> choral-pdf.abc
+	echo >> choral-pdf.abc
+	echo "%%newpage" >> choral-pdf.abc
+	HYMN=""
+	ADD=`numpages-in-hymn.pl ${i}`
+	PG=$((PG+ADD))
+done
+update-pdf choral-pdf.abc
+cat ${OHROOT}Choral/BookmarksChoral ${OHROOT}Choral/2013Choralindex.ps choral-pdf.ps copying.ps > combined.ps
+ps2pdf -sPAPERSIZE=letter combined.ps
+mv combined.pdf ${OHROOT}Choral/OpenHymnalChoral2013.pdf
+rm choral-pdf.ps choral-pdf.pdf combined.ps
+exit
+
